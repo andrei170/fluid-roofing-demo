@@ -61,6 +61,10 @@ document.addEventListener('DOMContentLoaded', function () {
     var done = function () {
       form.style.display = 'none';
       document.getElementById('qok').style.display = 'block';
+      // Conversion tracking: fires once analytics/pixel are installed (GA4 + Meta).
+      if (window.gtag) { window.gtag('event', 'generate_lead', { form: 'quote_request' }); }
+      if (window.fbq) { window.fbq('track', 'Lead'); }
+      if (window.dataLayer) { window.dataLayer.push({ event: 'quote_submit' }); }
     };
     if (FORM_ENDPOINT) {
       var data = new FormData(form);
@@ -72,4 +76,33 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   show(0);
+});
+
+// ---- Instant estimate calculator ----
+document.addEventListener('DOMContentLoaded', function () {
+  var box = document.getElementById('calcbox');
+  if (!box) return;
+  var sqft = 0, mat = '';
+  // installed $/sqft ranges (Spokane-area blended benchmarks)
+  var rates = { asphalt: [5.5, 8.5], metal: [9, 15] };
+
+  function fmt(n) { return '$' + (Math.round(n / 100) * 100).toLocaleString(); }
+  function update() {
+    var out = document.getElementById('calcRange');
+    if (!sqft || !mat) { out.textContent = 'Select options above'; return; }
+    var r = rates[mat];
+    out.textContent = fmt(sqft * r[0]) + ' - ' + fmt(sqft * r[1]);
+  }
+  box.querySelectorAll('#sizeBtns button').forEach(function (b) {
+    b.addEventListener('click', function () {
+      box.querySelectorAll('#sizeBtns button').forEach(function (x) { x.classList.remove('sel'); });
+      b.classList.add('sel'); sqft = parseInt(b.getAttribute('data-sqft'), 10); update();
+    });
+  });
+  box.querySelectorAll('#matBtns button').forEach(function (b) {
+    b.addEventListener('click', function () {
+      box.querySelectorAll('#matBtns button').forEach(function (x) { x.classList.remove('sel'); });
+      b.classList.add('sel'); mat = b.getAttribute('data-mat'); update();
+    });
+  });
 });
